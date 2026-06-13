@@ -1299,9 +1299,44 @@ footer {
         <h2>Espace Administrateur</h2>
         <p>Accès réservé aux agents ONHYM et prestataire</p>
       </div>
-      <div id="loginBox" class="login-box">
+      <div id="loginBox" class="login-box" style="max-width:480px;">
         <div class="icon">🔒</div>
         <h3>Connexion sécurisée</h3>
+
+        <!-- COMPTES DISPONIBLES -->
+        <div style="background:#eef2f7;border-radius:10px;padding:14px 16px;margin-bottom:18px;text-align:left;">
+          <div style="font-weight:700;color:#003d7a;font-size:0.88em;margin-bottom:10px;letter-spacing:0.3px;">👥 COMPTES DISPONIBLES</div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.82em;">
+            <thead><tr style="background:#003d7a;color:white;">
+              <th style="padding:5px 8px;border-radius:4px 0 0 4px;">Identifiant</th>
+              <th style="padding:5px 8px;">Mot de passe</th>
+              <th style="padding:5px 8px;border-radius:0 4px 4px 0;">Rôle</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #dbe3ed;">
+                <td style="padding:6px 8px;font-family:monospace;font-weight:700;color:#003d7a;">admin</td>
+                <td style="padding:6px 8px;font-family:monospace;">ONHYM@2026</td>
+                <td style="padding:6px 8px;"><span style="background:#003d7a;color:white;padding:2px 8px;border-radius:4px;font-size:0.85em;">Admin</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid #dbe3ed;">
+                <td style="padding:6px 8px;font-family:monospace;font-weight:700;color:#003d7a;">drh.onhym</td>
+                <td style="padding:6px 8px;font-family:monospace;">DRH@2026</td>
+                <td style="padding:6px 8px;"><span style="background:#0056b3;color:white;padding:2px 8px;border-radius:4px;font-size:0.85em;">DRH</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid #dbe3ed;">
+                <td style="padding:6px 8px;font-family:monospace;font-weight:700;color:#003d7a;">jury.onhym</td>
+                <td style="padding:6px 8px;font-family:monospace;">Jury@2026</td>
+                <td style="padding:6px 8px;"><span style="background:#d4a017;color:#002551;padding:2px 8px;border-radius:4px;font-size:0.85em;">Jury</span></td>
+              </tr>
+              <tr>
+                <td style="padding:6px 8px;font-family:monospace;font-weight:700;color:#003d7a;">daf.onhym</td>
+                <td style="padding:6px 8px;font-family:monospace;">DAF@2026</td>
+                <td style="padding:6px 8px;"><span style="background:#2e7d32;color:white;padding:2px 8px;border-radius:4px;font-size:0.85em;">DAF</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <div id="loginError" class="alert alert-danger" style="display:none; margin-bottom:15px; text-align:left;">
           <span class="alert-icon">❌</span>
           <div id="loginErrorMsg">Identifiants incorrects.</div>
@@ -1324,11 +1359,8 @@ footer {
               <button type="button" onclick="togglePwdVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1em;" title="Afficher/Masquer">👁</button>
             </div>
           </div>
-          <button type="submit" class="btn btn-secondary" style="width:100%;" id="loginBtn">Se connecter</button>
+          <button type="submit" class="btn btn-secondary" style="width:100%;padding:14px;font-size:1.05em;" id="loginBtn">🔐 Se connecter</button>
         </form>
-        <p style="margin-top:15px; font-size:0.85em; color:var(--gray-600);">
-          Contactez la DRH pour obtenir vos identifiants
-        </p>
       </div>
 
       <div id="adminDashboard" class="dashboard">
@@ -3145,11 +3177,19 @@ function loginAdmin(e) {
   var err   = document.getElementById('loginError');
   var errMsg= document.getElementById('loginErrorMsg');
 
-  // Identifiants autorisés
-  var ok = (login === 'admin' && pwd === 'ONHYM2026') ||
-           (login === 'drh.onhym' && pwd === 'DRH@ONHYM2026');
+  // ============================================================
+  // COMPTES FIXES — NE PAS MODIFIER SANS REGENERER LE FICHIER
+  // ============================================================
+  const FIXED_ACCOUNTS = [
+    { login: 'admin',        pwd: 'ONHYM@2026',    name: 'Administrateur Principal', role: 'admin' },
+    { login: 'drh.onhym',   pwd: 'DRH@2026',      name: 'Direction des Ressources Humaines', role: 'drh' },
+    { login: 'jury.onhym',  pwd: 'Jury@2026',     name: 'Membre du Jury', role: 'jury' },
+    { login: 'daf.onhym',   pwd: 'DAF@2026',      name: 'Direction Administrative et Financière', role: 'daf' }
+  ];
 
-  if (!ok) {
+  var userFound = FIXED_ACCOUNTS.find(u => u.login === login && u.pwd === pwd);
+
+  if (!userFound) {
     err.style.display = 'flex';
     errMsg.textContent = 'Identifiant ou mot de passe incorrect.';
     document.getElementById('adminPassword').value = '';
@@ -3162,9 +3202,9 @@ function loginAdmin(e) {
   // Sauvegarder session
   try {
     sessionStorage.setItem('onhym_admin_session', JSON.stringify({
-      login: login,
-      name: login === 'admin' ? 'Administrateur principal' : 'Direction RH',
-      role: login === 'admin' ? 'admin' : 'drh',
+      login: userFound.login,
+      name: userFound.name,
+      role: userFound.role,
       loginAt: new Date().toISOString()
     }));
   } catch(ex) {}
@@ -3178,8 +3218,8 @@ function loginAdmin(e) {
   // Infos utilisateur dans le dashboard
   var cu = document.getElementById('currentUserDisplay');
   var cr = document.getElementById('currentRoleDisplay');
-  if (cu) cu.textContent = (login === 'admin' ? 'Administrateur' : 'Direction RH') + ' (' + login + ')';
-  if (cr) cr.textContent = login === 'admin' ? 'Admin complet' : 'DRH';
+  if (cu) cu.textContent = userFound.name + ' (' + userFound.login + ')';
+  if (cr) cr.textContent = userFound.role.toUpperCase();
 
   // Afficher panel candidats par défaut
   showAdminPanel('candidats');
